@@ -12,7 +12,7 @@ case class FutureEither[A, B](value: Future[Either[A, B]]) {
     FutureEither(
       value.flatMap {
         case l @ Left(_) => Future.successful(l.asInstanceOf[Either[A, BB]])
-        case Right(r) => f(r)
+        case Right(r) => f(r).value
       }
     )
   }

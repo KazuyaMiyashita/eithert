@@ -30,14 +30,13 @@ class FutureExampleSpec extends WordSpec with Matchers with ScalaFutures {
 
     "do three times (using flatMap)" in {
       val num = 12
-      val result = 1 // floor(1.5)
-  
+ 
       val composed: Future[Int] = divideBy2Async(num).flatMap { res1 =>
         divideBy2Async(res1).flatMap { res2 =>
           divideBy2Async(res2)
         }
       }
-      composed.futureValue shouldEqual result
+      composed.failed.futureValue.getMessage shouldEqual "3 is not divisible by 2"
     }
 
     "do twice (using for expression)" in {
@@ -54,7 +53,6 @@ class FutureExampleSpec extends WordSpec with Matchers with ScalaFutures {
 
     "do three times (using for expression)" in {
       val num = 12
-      val result = 1 // floor(1.5)
   
       val composed: Future[Int] = for {
         res1 <- divideBy2Async(num)
@@ -62,7 +60,7 @@ class FutureExampleSpec extends WordSpec with Matchers with ScalaFutures {
         res3 <- divideBy2Async(res2)
       } yield res3
   
-      composed.futureValue shouldEqual result
+      composed.failed.futureValue.getMessage shouldEqual "3 is not divisible by 2"
     }
 
   }
@@ -80,9 +78,8 @@ class FutureExampleSpec extends WordSpec with Matchers with ScalaFutures {
     "do once (indivisible)" in {
       val num = 12
       val denom = 5
-      val result = 2 // floor(2.5)
   
-      divideAsync(num, denom).futureValue shouldEqual result
+      divideAsync(num, denom).failed.futureValue.getMessage shouldEqual "12 is not divisible by 5"
     }
 
     "do once (zero dividision)" in {

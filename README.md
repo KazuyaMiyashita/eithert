@@ -219,7 +219,7 @@ case class FutureEither[A, B](value: Future[Either[A, B]]) {
     FutureEither(
       value.flatMap {
         case l @ Left(_) => Future.successful(l.asInstanceOf[Either[A, BB]])
-        case Right(r) => f(r)
+        case Right(r) => f(r).value
       }
     )
   }
@@ -305,7 +305,47 @@ val a: Future[Either[DivideError, Int]] = e.run.map(_.toEither)
 
 * 覚える `EitherT` のメソッドは少なくしていきたいので色々工夫する
 
-### Option[T] の代わりに Either[A, B] を返す
+### EitherT[Future, FooErr, Foo]とEitherT[Future, BarErr, Bar]を合成する
+
+* `leftMap` を使ってleftの型を揃えましょう
+
+```scala
+trait Foo
+sealed trait FooErr
+object FooErr extends FooErr
+trait FooRepository {
+  def findBy(fooId: Long): Future[Either[FooErr, Foo]]
+}
+
+trait Bar
+sealed trait BarErr
+object BarErr extends BarErr
+trait BarRepository {
+  def findBy(barId: Long): Future[Either[BarErr, Bar]]
+}
+
+case class FooBar(foo: Foo, bar: Bar)
+sealed trait FooBarErr
+object FooBarErr extends FooBarErr
+class FooBarServise(fooRepository: FooRepository, barRepository: BarRepository) {
+  def findFooBar(fooId: Long, barId: Long): Future[Either[FooBarErr, FooBar]] = {
+    val e = for {
+      foo <- EitherT(fooRepository.findBy(fooId)).leftMap {
+        case FooErr => FooBarErr
+      }
+      bar <- EitherT(barRepository.findBy(barId)).leftMap {
+        case BarErr => FooBarErr
+      }
+    } yield FooBar(foo, bar)
+    e.value
+  }
+}
+```
+
+
+### Future[Option[T]] をEitherTで合成したい
+
+#### Future[Option[T]] の代わりに Future[Either[A, B]] を返すように変更してしまう
 
 ```scala
 trait UserRepository {
@@ -341,7 +381,14 @@ object FindByError {
 
 のように `FindByError` のエラーの種類を増やした時に変更が少ないという利点もある
 
-どうしても `Future[Option[T]]` から変更できない場合は `EitherT.fromOption` を使っていく
+#### どうしても `Future[Option[T]]` から変更できないのですが…
+
+Catsには `EitherT.fromOption` が生えていたりするけれど、それを使わなくてもScala標準のOptionの `toRight` を使えば良いような気がする
+
+```scala
+def findBy: Future[Option[User]]
+def findByEither: Future[Either[String, User]] = a.map(_.toRight("when Option is None"))
+```
 
 ### EitherTで合成した後はFuture[Either[A, B]]に戻して返す
 
@@ -382,10 +429,6 @@ def divideAsyncEitherThreeTimes(num: Int, denom: Int): Future[Either[DivideError
 
 `EitherT` に包んだり取り出したりするコストは微々たるものなので何度でも包んだり取り出したりしちゃいましょう
 
-### 色々なサービスの Future[Either[A, B]] を合成したい
+## おわりに
 
-// wip
-
-### Either[A, B] と Future[Either[A, B]] を合成したい
-
-// wip
+みんなで楽しいEitherTライフを！
