@@ -28,6 +28,9 @@
 * `Either` は成功時の値か失敗時の値のどちらかを表すことができる
 * 例外を投げる代わりに、失敗を意味する値(`case class` や `object`)を扱うことでスマートに記述できる
 
+* [cf. EitherExample.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/main/scala/example/EitherExample.scala)
+* [cf. EitherExampleSpec.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/test/scala/example/EitherExampleSpec.scala)
+
 ```scala
 /**
  * 整数同士を割るメソッド
@@ -90,6 +93,9 @@ val result: Either[DivideError, Int] = for {
 * `Future` を行うような処理はデータベースへの書き込み・ネットワーク越しの通信・ディスクへの書き込みなど例外が発生することが多い。
   * 例外がなければ結果は `Success` に包まれる
   * 例外が発生したら例外が `Failure` に包まれる
+
+* [cf. FutureExample.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/main/scala/example/FutureExample.scala)
+* [cf. FutureExampleSpec.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/test/scala/example/FutureExampleSpec.scala)
 
 ```scala
 import scala.concurrent.Future
@@ -162,6 +168,9 @@ result.onComplete {
 
 * `Either` も `Future` も便利そうなので、同時に使ってしまおう
 
+* [cf. FutureEitherExample.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/main/scala/example/FutureEitherExample.scala)
+* [cf. FutureEitherExampleSpec.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/test/scala/example/FutureEitherExampleSpec.scala)
+
 ```scala
 def divideAsyncEither(num: Int, denom: Int): Future[Either[DivideError, Int]] = {
   Future(divideEither(num, denom))
@@ -205,6 +214,9 @@ val result: Future[Either[DivideError, Int]] = for {
 * 方針1. `Future[Either[A, B]]` である値をラップする
   * `FutureEither(divideAsyncEither(12, 2))` のようにしてインスタンスを作成できる
 * 方針2. `FutureEither` は `Future` が `Success`, `Either` が `Right` の時 `flatMap` が出来る
+
+* [cf. FutureEither.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/main/scala/mylib/FutureEither.scala)
+* [cf. FutureEitherSpec.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/test/scala/mylib/FutureEitherSpec.scala)
 
 ```scala
 import scala.concurrent.{Future, ExecutionContext}
@@ -265,6 +277,8 @@ result.onComplete {
 * 上記の `FutureEither` と同じような感じ
 * `import cats.implicits._` をする必要がある
 
+* [cf. CatsEitherTSpec.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/test/scala/mycats/CatsEitherTSpec.scala)
+
 ```scala
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -284,6 +298,8 @@ val a: Future[Either[DivideError, Int]] = e.value
 * `import scalaz.std.scalaFuture._` をする必要がある
 * Scalazでは `Either` の代わりに `\/` を使うので、 `EitherT.fromEither` で `Future[Either[A, B]]` を入れる
 * `EitherT` から中の `Future[\/[A, B]]` を取り出すのに `run` を使い、さらに `_.map(_.toEither)` で `Future[Either[A, B]]` に戻せる
+
+* [cf. ScalazEitherTSpec.scala](https://github.com/KazuyaMiyashita/eithert/blob/master/src/test/scala/myscalaz/ScalazEitherTSpec.scala)
 
 ```scala
 import scala.concurrent.Future
